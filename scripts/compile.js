@@ -56,7 +56,7 @@ var result = JSON.parse(solc.compile(JSON.stringify(compileInput), findImports))
 // `output` here contains the JSON output as specified in the documentation
 console.log("Result:\n", result);
 for (var contractName in result.contracts['CreditABS.sol']) {
-	console.log(contractName + ': ' + result.contracts['CreditABS.sol'][contractName].evm.bytecode.object)
+	console.log(contractName + ': ' + result.contracts['CreditABS.sol'][contractName].evm.bytecode.object);
 }
 
 // // check errors
@@ -70,4 +70,4 @@ Object.keys(result.contracts).forEach(name => {
     const filePath = path.resolve(compileDir, `${contractName}.json`);
     fs.outputJSONSync(filePath, result.contracts[name]);
     console.log(`Save compiled contract ${contractName} to ${filePath}`);
-})
+});
