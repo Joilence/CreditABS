@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.4.24;
 
 // Specifically For Credit Assets Securitization
 // https://wiki.mbalib.com/wiki/信贷资产证券化
@@ -73,7 +73,7 @@ contract CreditABS {
     struct Payment {
         string description;
         uint256 amount;
-        address payable receiver;
+        address receiver;
         PaymentState state;
         uint256 voteCount;
         mapping(address => bool) votes;
@@ -119,7 +119,7 @@ contract CreditABS {
         _transfer(msg.sender, _to, _amount);
     }
 
-    function createPayment(string memory _description, uint _amount, address payable _receiver) public onlyIssuer {
+    function createPayment(string memory _description, uint _amount, address _receiver) public onlyIssuer {
         Payment memory newPayment = Payment({
             description: _description,
             amount: _amount,
@@ -150,7 +150,7 @@ contract CreditABS {
         Payment storage payment = payments[index];
 
         require(payment.state == PaymentState.Approved, "This payment is either ended or hasn't been approved.");
-        require(address(this).balance >= payment.amount);
+        require(address(this).balance >= payment.amount, "The contract doesn't have enough money.");
         payment.receiver.transfer(payment.amount);
 
         payment.state == PaymentState.Completed;

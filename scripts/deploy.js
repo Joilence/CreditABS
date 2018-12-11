@@ -1,38 +1,49 @@
-/*jshint esversion: 6 */
-
 const fs = require('fs-extra');
 const path = require('path');
+const config = require('config');
 const Web3 = require('web3');
 const HDWalletProvider = require('truffle-hdwallet-provider');
 
-// Get bytecode
+// 1. 拿到 bytecode
 const contractPath = path.resolve(__dirname, '../compiled/CreditABS.json');
-const contractJSON = JSON.parse(fs.readFileSync(contractPath, 'utf8'));
-// const interface = contractJSON.abi;
-// const bytecode = contractJSON.evm.bytecode.object;
+const { interface, bytecode } = require(contractPath);
 
-// Configure provider
+// 2. 配置 provider
 const provider = new HDWalletProvider(
-    'egg rail pizza sea neither ship empty donor pet disease people egg',
-    'https://rinkeby.infura.io/v3/89e84cf0935549d380c7fed664a24bec'
-)
+    config.get('hdwallet'),
+    config.get('infuraUrl'),
+);
 
-// Initialize web3 instance
+// 3. 初始化 web3 实例
 const web3 = new Web3(provider);
 
-console.log(typeof(contractJSON['abi']));
-// console.log(contractJSON["abi"]);
+const params = {
+    _name: 'CreditABSDefault',
+    _goal: 100000,
+    _description: 'CreditABS Default'
+};
 
-// (async () => {
-//     // Get account in the wallet
-//     const accounts = await web3.eth.getAccounts();
-//     console.log('Deploy contract account: ', accounts[0]);
+(async () => {
+    // 4. 获取钱包里面的账户
+    const accounts = await web3.eth.getAccounts();
+    console.log('合约部署账户:', accounts[0]);
 
-//     // Create contract instance and deploy
-//     console.time('contract deploy time');
-//     const result = await new web3.eth.Contract(JSON.parse(interface))
-//                             .deploy({data: bytecode, arguments: ['AUDI']})
-//                             .send({from:accounts[0], gas:'1000000'});
-//     console.timeEnd('contract deploy time');
-//     console.log('Succeed to deploy at: ', result.options.address);
-// })();
+    // 5. 创建合约实例并且部署
+    console.time('合约部署耗时');
+    const result = await new web3.eth.Contract(JSON.parse(interface))
+        .deploy({ data: bytecode, arguments: Object.values(params) })
+        .send({ from: accounts[0], gas: '5000000' });
+    console.timeEnd('合约部署耗时');
+
+    const contractAddress = result.options.address;
+
+    console.log('合约部署成功:', contractAddress);
+    console.log('合约查看地址:', `https://rinkeby.etherscan.io/address/${contractAddress}`);
+
+    // 6. 合约地址写入文件系统
+    const addressFile = path.resolve(__dirname, '../address.json');
+    fs.writeFileSync(addressFile, JSON.stringify(contractAddress));
+    console.log('地址写入成功:', addressFile);
+
+    process.exit();
+})();

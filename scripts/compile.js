@@ -1,67 +1,31 @@
-/*jshint esversion: 6 */
-
 const fs = require('fs-extra');
 const path = require('path');
 const solc = require('solc');
 
-// clean up the compile dir
-const compileDir = path.resolve(__dirname, '../compiled');
-fs.removeSync(compileDir);
-fs.ensureDirSync(compileDir);
+// 1. cleanup
+const compiledDir = path.resolve(__dirname, '../compiled');
+fs.removeSync(compiledDir);
+fs.ensureDirSync(compiledDir);
 
-// compile @0.5.1
-function getContractSource(filename) {
-    try {
-        const file =  fs.readFileSync(
-            path.resolve(__dirname, '../contracts', filename),
-            'utf8'
-        );
-        return file;
-    } catch (err) {
-        if (err instanceof Error) {
-            if (err.code === 'ENOENT')
-                console.log('File not found.');
-            else
-                throw err;
-        } else { throw err; }
+// 2. search all contracts
+const contractFiles = fs.readdirSync(path.resolve(__dirname, '../contracts'));
+contractFiles.forEach(contractFile => {
+    // 2.1 compile
+    const contractPath = path.resolve(__dirname, '../contracts', contractFile);
+    const contractSource = fs.readFileSync(contractPath, 'utf8');
+    const result = solc.compile(contractSource, 1);
+    console.log(`file compiled: ${contractFile}`)
+
+    // 2.2 check errors
+    if (Array.isArray(result.errors) && result.errors.length) {
+        throw new Error(result.errors[0]);
     }
-}
 
-const compileInput = {
-    language: 'Solidity',
-    sources: {
-        'CreditABS.sol': {
-            content: getContractSource('CreditABS.sol')
-        }
-    },
-    settings: {
-        outputSelection: {
-            '*': {
-                '*': ['*']
-            }
-        }
-    }
-};
-
-function findImports (path) {
-    if (path === 'SafeMath.sol') {
-        return { contents: getContractSource('SafeMath.sol') };
-    } else {
-        throw new Error('File ' + path + ' is neither given or found');
-    }
-}
-
-var result = JSON.parse(solc.compile(JSON.stringify(compileInput), findImports));
-
-// check errors
-if (Array.isArray(result.errors) && result.errors.length) {
-    throw new Error(result.errors[0]);
-}
-
-// save to disk
-Object.keys(result.contracts).forEach(name => {
-    const contractName = name.replace('.sol', '');
-    const filePath = path.resolve(compileDir, `${contractName}.json`);
-    fs.outputJSONSync(filePath, result.contracts[name]);
-    console.log(`Save compiled contract ${contractName} to ${filePath}`);
+    // 2.3 save to disk
+    Object.keys(result.contracts).forEach(name => {
+        const contractName = name.replace(/^:/, '');
+        const filePath = path.resolve(compiledDir, `${contractName}.json`);
+        fs.outputJsonSync(filePath, result.contracts[name]);
+        console.log(` > contract ${contractName} saved to ${filePath}`);
+    });
 });

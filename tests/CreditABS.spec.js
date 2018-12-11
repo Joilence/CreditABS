@@ -21,11 +21,11 @@ const param = {
 describe('contract', () => {
     beforeEach(async () => {
         accounts = await web3.eth.getAccounts();
-        console.log('Accounts:', accounts);
+        console.log('Accounts:\n', accounts);
 
         contract = await new web3.eth.Contract(JSON.parse(interface))
             .deploy({ data: bytecode, arguments: Object.values(param) })
-            .send({ from: accounts[0], gas: '1000000'});
+            .send({ from: accounts[0], gas: '5000000'});
         console.log('Contract Deployed:', contract.options.address);
     });
 
