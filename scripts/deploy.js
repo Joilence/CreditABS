@@ -4,17 +4,14 @@ const config = require('config');
 const Web3 = require('web3');
 const HDWalletProvider = require('truffle-hdwallet-provider');
 
-// 1. 拿到 bytecode
 const contractPath = path.resolve(__dirname, '../compiled/CreditABS.json');
 const { interface, bytecode } = require(contractPath);
 
-// 2. 配置 provider
 const provider = new HDWalletProvider(
     config.get('hdwallet'),
     config.get('infuraUrl'),
 );
 
-// 3. 初始化 web3 实例
 const web3 = new Web3(provider);
 
 const params = {
@@ -24,26 +21,23 @@ const params = {
 };
 
 (async () => {
-    // 4. 获取钱包里面的账户
     const accounts = await web3.eth.getAccounts();
-    console.log('合约部署账户:', accounts[0]);
+    console.log('Deploy Account: ', accounts[0]);
 
-    // 5. 创建合约实例并且部署
-    console.time('合约部署耗时');
+    console.time('Deploy Time Consuming');
     const result = await new web3.eth.Contract(JSON.parse(interface))
         .deploy({ data: bytecode, arguments: Object.values(params) })
         .send({ from: accounts[0], gas: '5000000' });
-    console.timeEnd('合约部署耗时');
+    console.timeEnd('Deploy Time Consuming');
 
     const contractAddress = result.options.address;
 
-    console.log('合约部署成功:', contractAddress);
-    console.log('合约查看地址:', `https://rinkeby.etherscan.io/address/${contractAddress}`);
+    console.log('Contract is deployed at:', contractAddress);
+    console.log('Contract address:', `https://rinkeby.etherscan.io/address/${contractAddress}`);
 
-    // 6. 合约地址写入文件系统
     const addressFile = path.resolve(__dirname, '../address.json');
     fs.writeFileSync(addressFile, JSON.stringify(contractAddress));
-    console.log('地址写入成功:', addressFile);
+    console.log('Contract address write to:', addressFile);
 
     process.exit();
 })();

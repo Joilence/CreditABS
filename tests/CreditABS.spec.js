@@ -1,5 +1,3 @@
-/*jshint esversion: 6 */
-
 const path = require('path');
 const assert = require('assert');
 const ganache = require('ganache-cli');
