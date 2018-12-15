@@ -75,7 +75,7 @@ contract CreditABS {
         uint256 amount;
         address receiver;
         PaymentState state;
-        uint256 voteCount;
+        uint256 voteShare;
         mapping(address => bool) votes;
     }
 
@@ -83,6 +83,7 @@ contract CreditABS {
     string public name;
     address public issuer;
     uint256 public financingGoal;
+    uint256 public fundReceived;
     string public description; // certificates & description for this security
     
     uint256 public numOfTokenholders;
@@ -106,6 +107,7 @@ contract CreditABS {
         description = _description;
 
         numOfTokenholders = 0;
+        fundReceived = 0;
     }
 
     function purchase() public payable {
@@ -113,6 +115,7 @@ contract CreditABS {
         if (balances[msg.sender] == 0)
             numOfTokenholders += 1;
         balances[msg.sender] += balances[msg.sender].add(msg.value);
+        fundReceived = fundReceived.add(msg.value);
     }
 
     function checkBalance() public view returns (uint256) {
@@ -129,7 +132,7 @@ contract CreditABS {
             amount: _amount,
             receiver: _receiver,
             state: PaymentState.Voting,
-            voteCount: 0
+            voteShare: 0
         });
 
         payments.push(newPayment);
@@ -142,12 +145,10 @@ contract CreditABS {
         require(!payment.votes[msg.sender], "Cannot vote twice.");
 
         payment.votes[msg.sender] = true;
-        payment.voteCount += 1;
+        payment.voteShare = payment.voteShare.add(balances[msg.sender]);
 
-        if (payment.voteCount >= numOfTokenholders)
+        if (payment.voteShare >= (fundReceived / 2) )
             payment.state = PaymentState.Approved;
-
-        // TODO: Payment expired and dropped.
     }
 
     function processPayment(uint256 index) public onlyIssuer {
