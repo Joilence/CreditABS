@@ -115,6 +115,10 @@ contract CreditABS {
         balances[msg.sender] += balances[msg.sender].add(msg.value);
     }
 
+    function checkBalance() public view returns (uint256) {
+        return balances[msg.sender];
+    }
+
     function transfer(address _to, uint256 _amount) public {
         _transfer(msg.sender, _to, _amount);
     }
@@ -161,7 +165,7 @@ contract CreditABS {
         require(balances[_from] >= _amount, "Tokenholder does not have enough token.");
         
         assembly {
-            // Retrieve the size of the code on target address, this needs assembly .
+            // Retrieve the size of the code on target address, this needs assembly.
             codeLength := extcodesize(_to)
         }
 
