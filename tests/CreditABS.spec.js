@@ -176,7 +176,7 @@ describe('Contract Deployment', () => {
                         .call({from: accounts[1]});
                     assert.ok(false);
                 } catch (err) {
-                    // console.log(err.results[Object.keys(err.results)[0]].reason);
+                    console.log(err.results[Object.keys(err.results)[0]].reason);
                     assert.ok(err);
                 }
             });
@@ -187,7 +187,7 @@ describe('Contract Deployment', () => {
                         .call({from: accounts[0]});
                     assert.ok(false);
                 } catch (err) {
-                    // console.log(err.results[Object.keys(err.results)[0]].reason);
+                    console.log(err.results[Object.keys(err.results)[0]].reason);
                     assert.ok(err);
                 }
             });
@@ -212,7 +212,7 @@ describe('Contract Deployment', () => {
                     await abs.methods.approvePayment(0).call({from: accounts[0]});
                     assert.ok(false);
                 } catch (err) {
-                    // console.log(err.results[Object.keys(err.results)[0]].reason);
+                    console.log(err.results[Object.keys(err.results)[0]].reason);
                     assert.ok(err);
                 }
             })
@@ -223,7 +223,7 @@ describe('Contract Deployment', () => {
                     await abs.methods.approvePayment(0).send({from: accounts[1]});
                     assert.ok(false);
                 } catch (err) {
-                    // console.log(err.results[Object.keys(err.results)[0]].reason);
+                    console.log(err.results[Object.keys(err.results)[0]].reason);
                     assert.ok(err);
                 }
             });
