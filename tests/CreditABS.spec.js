@@ -40,11 +40,13 @@ describe('Contract Deployment', () => {
         });
         
         it('should allow user to purchase', async () => {
-            const amount = 1000000;
+            const amount = 100;
             const purchaser = accounts[1];
             await abs.methods.purchase().send({from: purchaser, value: amount});
-            const balance = await abs.methods.checkBalance().call({from: accounts[1]});
-            assert.equal(balance, amount);
+            const userBalance = await abs.methods.checkBalance().call({from: accounts[1]});
+            const contractBalance = await web3.eth.getBalance(abs.options.address);
+            assert.equal(contractBalance, amount);
+            assert.equal(userBalance, amount);
         });
     
         it('should forbid contract account from purchase', async () => {
@@ -135,6 +137,9 @@ describe('Contract Deployment', () => {
         const b4 = 4;
         const b5 = 5;
         const bAll = b1 + b2 + b3 + b4 + b5;
+
+        const paymentName = "TEST";
+        const paymentAmount = 1;
     
         beforeEach('Create five tokenholders', async () => {
             await abs.methods.purchase().send({from: accounts[1], value: b1});
@@ -149,12 +154,9 @@ describe('Contract Deployment', () => {
         });
 
         describe('Contract Payment - Create', async () => {
-            const paymentName = "TEST";
-            const paymentAmount = 1;
 
-            // enum PaymentState {Voting, Declined, Approved, Completed}
+            // enum PaymentState {Voting, Declined, Approved, Completed, Dropped}
 
-            // TODO: check payment state
             it('should only allow issuer to create payment', async () => {
                 const recvAddress = accounts[1];
                 const issuer = accounts[0];
@@ -165,6 +167,7 @@ describe('Contract Deployment', () => {
                 assert.equal(payment.description, paymentName);
                 assert.equal(payment.amount, paymentAmount);
                 assert.equal(payment.receiver, recvAddress);
+                assert.equal(payment.state, 0);
             });
         
             it('should not allow non-issuer to create payment', async () => {
@@ -173,7 +176,7 @@ describe('Contract Deployment', () => {
                         .call({from: accounts[1]});
                     assert.ok(false);
                 } catch (err) {
-                    console.log(err.results[Object.keys(err.results)[0]].reason);
+                    // console.log(err.results[Object.keys(err.results)[0]].reason);
                     assert.ok(err);
                 }
             });
@@ -184,22 +187,19 @@ describe('Contract Deployment', () => {
                         .call({from: accounts[0]});
                     assert.ok(false);
                 } catch (err) {
-                    console.log(err.results[Object.keys(err.results)[0]].reason);
+                    // console.log(err.results[Object.keys(err.results)[0]].reason);
                     assert.ok(err);
                 }
             });
         })
     
         describe('Contract Payment - Vote', async () => {
-            const paymentName = "TEST";
-            const paymentAmount = 1;
 
             beforeEach('Create a open payment', async () => {
                 await abs.methods.createPayment(paymentName, paymentAmount, accounts[1])
                     .send({from: accounts[0], gas: '1000000'});
             });
 
-            // TODO: check is vote
             it('should allow tokenholders to vote for payment', async () => {
                 await abs.methods.approvePayment(0).send({from: accounts[1]});
                 const payment = await abs.methods.payments(0).call();
@@ -212,7 +212,7 @@ describe('Contract Deployment', () => {
                     await abs.methods.approvePayment(0).call({from: accounts[0]});
                     assert.ok(false);
                 } catch (err) {
-                    console.log(err.results[Object.keys(err.results)[0]].reason);
+                    // console.log(err.results[Object.keys(err.results)[0]].reason);
                     assert.ok(err);
                 }
             })
@@ -223,42 +223,62 @@ describe('Contract Deployment', () => {
                     await abs.methods.approvePayment(0).send({from: accounts[1]});
                     assert.ok(false);
                 } catch (err) {
-                    console.log(err.results[Object.keys(err.results)[0]].reason);
+                    // console.log(err.results[Object.keys(err.results)[0]].reason);
                     assert.ok(err);
                 }
             });
 
-            // TODO: Check payment state
             it('should properly change payment state as approved', async () => {
-
+                await abs.methods.approvePayment(0).send({from: accounts[5]});
+                await abs.methods.approvePayment(0).send({from: accounts[4]});
+                const payment = await abs.methods.payments(0).call();
+                assert.equal(payment.state, 2);
             });
         });
     
-        // describe('Contract Payment - Action', async () => {
-        //     beforeEach(async () => {
+        describe('Contract Payment - Action', async () => {
+            beforeEach(async () => {
+                await abs.methods.createPayment(paymentName, paymentAmount, accounts[1])
+                    .send({from: accounts[0], gas: '1000000'});
+                await abs.methods.approvePayment(0).send({from: accounts[5]});
+                await abs.methods.approvePayment(0).send({from: accounts[4]});
+            });
+
+            it('should allow issuer to process payment', async () => {
                 
-        //     });
+                const oldB = await web3.eth.getBalance(abs.options.address);
 
-        //     it('should only allow issuer to process payment', async () => {
-        //         try {
-        //             assert.ok(false);
-        //         } catch (err) {
-        //             assert.ok(err);
-        //         }
-        //     });
+                let payment = await abs.methods.payments(0).call();
+                assert.equal(payment.state, 2);
+
+                const oldBalance = await abs.methods.fundReceived().call();
+                await abs.methods.processPayment(0).send({from: accounts[0], gas: '1000000'});
+                payment = await abs.methods.payments(0).call();
+                const newBalance = await abs.methods.fundReceived().call();
+                const newB = await web3.eth.getBalance(abs.options.address);
+
+                assert.equal(oldB - newB, payment.amount);
+                assert.equal(payment.state, 3);
+                assert.equal(oldBalance - newBalance, payment.amount);
+            });
+
+            it('should not allow non-issuer to process payment', async () => {
+                try {
+                    await abs.methods.processPayment(0).send({from: accounts[1]});
+                    assert.ok(false);
+                } catch (err) {
+                    assert.ok(err);
+                }
+            })
         
-        //     it('should only allow issuer to cancel payment', async () => {
-        //         try {
-        //             assert.ok(false);
-        //         } catch (err) {
-        //             assert.ok(err);
-        //         }
-        //     });
-
-        //     it('should properly process payment', async () => {
-
-        //     })
-        // })
+            // it('should allow issuer to cancel payment', async () => {
+            //     try {
+            //         assert.ok(false);
+            //     } catch (err) {
+            //         assert.ok(err);
+            //     }
+            // });
+        })
     });
 
 });

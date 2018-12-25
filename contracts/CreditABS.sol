@@ -68,7 +68,7 @@ library SafeMath {
 contract CreditABS {
     using SafeMath for uint256;
 
-    enum PaymentState {Voting, Declined, Approved, Completed}
+    enum PaymentState {Voting, Declined, Approved, Completed, Dropped}
 
     struct Payment {
         string description;
@@ -160,8 +160,8 @@ contract CreditABS {
         require(payment.state == PaymentState.Approved, "This payment is either ended or hasn't been approved.");
         require(address(this).balance >= payment.amount, "The contract doesn't have enough money.");
         payment.receiver.transfer(payment.amount);
-
-        payment.state == PaymentState.Completed;
+        fundReceived = fundReceived.sub(payment.amount);
+        payment.state = PaymentState.Completed;
     }
 
     // TODO: Cancel Payment
