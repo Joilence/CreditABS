@@ -196,17 +196,15 @@ describe('Contract Deployment', () => {
 
             beforeEach('Create a open payment', async () => {
                 await abs.methods.createPayment(paymentName, paymentAmount, accounts[1])
-                        .call({from: accounts[0], gas: '1000000'});
-                const payment = await abs.methods.payments(0).call();
+                    .send({from: accounts[0], gas: '1000000'});
             });
 
             // TODO: check is vote
             it('should allow tokenholders to vote for payment', async () => {
-                // await abs.methods.approvePayment(0).call({from: accounts[1]});
-                // const payment = await abs.methods.payments(0).call();
-                // const isVote = payment.votes(accounts[1]);
-                // console.log("#####", isVote, "######");
-                // assert.ok(isVote);
+                await abs.methods.approvePayment(0).send({from: accounts[1]});
+                const payment = await abs.methods.payments(0).call();
+                const balance = await abs.methods.balances(accounts[1]).call();
+                assert.ok(payment.voteShare, balance);
             });
     
             it('should not allow non-tokenholder to vote for payment', async () => {
@@ -221,8 +219,8 @@ describe('Contract Deployment', () => {
 
             it('should not allow any one to vote twice', async () => {
                 try {
-                    await abs.methods.approvePayment(0).call({from: accounts[1]});
-                    await abs.methods.approvePayment(0).call({from: accounts[1]});
+                    await abs.methods.approvePayment(0).send({from: accounts[1]});
+                    await abs.methods.approvePayment(0).send({from: accounts[1]});
                     assert.ok(false);
                 } catch (err) {
                     console.log(err.results[Object.keys(err.results)[0]].reason);
