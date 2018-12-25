@@ -112,6 +112,8 @@ contract CreditABS {
 
     function purchase() public payable {
         require(msg.value > 0, "Value should greater than 0 to purchase token.");
+        require(fundReceived <= financingGoal, "Financing goal has been reached.");
+        require(msg.value <= financingGoal - fundReceived, "Financing goal would be overpassed.");
         if (balances[msg.sender] == 0)
             numOfTokenholders += 1;
         balances[msg.sender] += balances[msg.sender].add(msg.value);
@@ -127,6 +129,7 @@ contract CreditABS {
     }
 
     function createPayment(string memory _description, uint _amount, address _receiver) public onlyIssuer {
+        require(_amount <= fundReceived, "Contract doesn't have enough balance.");
         Payment memory newPayment = Payment({
             description: _description,
             amount: _amount,
@@ -161,6 +164,8 @@ contract CreditABS {
         payment.state == PaymentState.Completed;
     }
 
+    // TODO: Cancel Payment
+
     function _transfer(address _from, address _to, uint256 _amount) private {
         uint256 codeLength;
         require(balances[_from] >= _amount, "Tokenholder does not have enough token.");
@@ -173,9 +178,11 @@ contract CreditABS {
         require(codeLength == 0, "Token can only be owned by EOA.");
 
         balances[_from] = balances[_from].sub(_amount);
+        if (balances[_to] == 0) 
+            numOfTokenholders = numOfTokenholders.add(1);
         balances[_to] = balances[_to].add(_amount);
 
         if (balances[_from] == 0)
-            numOfTokenholders -= 1;
+            numOfTokenholders = numOfTokenholders.sub(1);
     }
 }
