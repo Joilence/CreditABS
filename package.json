@@ -7,9 +7,9 @@
     "test": "mocha tests/",
     "compile": "node scripts/compile.js",
     "deploy": "node scripts/deploy.js",
-    "dev": "next",
+    "dev": "node server.js",
     "build": "next build",
-    "start": "next start"
+    "start": "NODE_ENV=production node server.js"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +17,7 @@
   "dependencies": {
     "config": "^3.0.0",
     "next": "^7.0.2",
+    "next-routes": "^1.4.2",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
     "solc": "^0.4.24",
