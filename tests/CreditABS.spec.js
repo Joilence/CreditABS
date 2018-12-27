@@ -29,7 +29,7 @@ describe('Contract Deployment', () => {
 
     it('Deploy a contract', () => {
         assert.ok(securityManager.options.address);
-        // assert.ok(abs.options.address);
+        assert.ok(abs.options.address);
     });
 
     describe('Contract Purchase', () => {
