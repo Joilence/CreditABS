@@ -3,8 +3,6 @@ pragma solidity ^0.4.24;
 // Specifically For Credit Assets Securitization
 // https://wiki.mbalib.com/wiki/信贷资产证券化
 
-// import "./SafeMath.sol";
-
 library SafeMath {
     /**
     * @dev Multiplies two numbers, reverts on overflow.
@@ -65,6 +63,20 @@ library SafeMath {
     }
 }
 
+contract SecurityManager {
+    using SafeMath for uint256;
+    address[] public ABSList;
+
+    function createABS(string memory _name, uint256 _goal, string memory _description) public {
+        address newSecurity = new CreditABS(_name, _goal, _description, msg.sender);
+        ABSList.push(newSecurity);
+    }
+
+    function getABSList() public view returns (address[]) {
+        return ABSList;
+    }
+}
+
 contract CreditABS {
     using SafeMath for uint256;
 
@@ -100,8 +112,8 @@ contract CreditABS {
         _;
     }
 
-    constructor(string memory _name, uint256 _goal, string memory _description) public {
-        issuer = msg.sender;
+    constructor(string memory _name, uint256 _goal, string memory _description, address _issuer) public {
+        issuer = _issuer;
         name = _name;
         financingGoal = _goal;
         description = _description;
