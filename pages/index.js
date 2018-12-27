@@ -1,41 +1,54 @@
 import React from 'react';
-import { Button } from '@material-ui/core';
+import { Grid, Button, Typography, Card, CardContent, CardActions } from '@material-ui/core';
 
+import { Link } from '../routes';
 import web3 from '../libs/web3';
+import SecurityManager from '../libs/securityManager';
 import withRoot from '../libs/withRoot';
 import Layout from '../components/Layout';
 
 class Index extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            accounts: [],
-        };
-    }
-
-    async componentDidMount() {
-        const accounts = await web3.eth.getAccounts();
-        const balances = await Promise.all(accounts.map(x => web3.eth.getBalance(x)));
-        console.log({ accounts, balances });
-
-        this.setState({ accounts: accounts.map((x, i) => ({ account: x, balance: balances[i] })) });
+    static async getInitialProps({ req }) {
+        const ABSs = await SecurityManager.methods.getABSList().call();
+        return { ABSs };
     }
 
     render() {
-
-        const {accounts} = this.state;
+        const { ABSs } = this.props;
 
         return (
             <Layout>
-                    <ul>
-                      {accounts.map(x => (
-                        <li key={x.account}>
-                          {x.account} => {web3.utils.fromWei(x.balance, 'ether')} ETH
-                        </li>
-                      ))}
-                    </ul>
+                <Grid container spacing={16}>
+                    {ABSs.map(this.renderABS)}
+                </Grid>
             </Layout>
+        );
+    }
+
+    renderABS(abs) {
+        return (
+            <Grid item md={4} key={abs}>
+                <Card>
+                    <CardContent>
+                        <Typography gutterBottom variant="headline" component="h2">
+                            {abs}
+                        </Typography>
+                        <Typography component="p">{abs}</Typography>
+                    </CardContent>
+                    <CardActions>
+                        <Link route={`/projects/${abs}`}>
+                            <Button size="small" color="primary">
+                                Purchase
+                            </Button>
+                        </Link>
+                        <Link route={`/projects/${abs}`}>
+                            <Button size="small" color="secondary">
+                                Detail
+                            </Button>
+                        </Link>
+                    </CardActions>
+                </Card>
+            </Grid>
         );
     }
 }

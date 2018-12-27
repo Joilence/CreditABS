@@ -16,15 +16,15 @@ const contract = new web3.eth.Contract(JSON.parse(SecurityManager.interface), ad
     console.log(accounts);
 
     const ABSs = [
-        {
-            name: 'ABS 1',
-            goal: 300000,
-            description: 'TEST ABS Contract 1'
-        },
+        // {
+        //     name: 'ABS 1',
+        //     goal: 300000,
+        //     description: 'TEST ABS Contract 1'
+        // },
         {
             name: 'ABS 2',
             goal: 300000,
-            description: 'TEST ABS Contract 2'
+            description: 'TEST ABS'
         }
     ];
     console.log(ABSs);
@@ -33,7 +33,7 @@ const contract = new web3.eth.Contract(JSON.parse(SecurityManager.interface), ad
     const results = await Promise.all(ABSs.map(x => 
         contract
             .methods.createABS(x.name, x.goal, x.description)
-            .send({ from: issuer, gas: '1000000' })
+            .send({ from: issuer, gas: '5000000' })
         )
     );
 
