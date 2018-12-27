@@ -1,3 +1,4 @@
 node_modules
 compiled
 .next
+.DS_Store
