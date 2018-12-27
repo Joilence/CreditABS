@@ -3,29 +3,33 @@ const assert = require('assert');
 const ganache = require('ganache-cli');
 const Web3 = require('web3');
 
-const contractPath = path.resolve(__dirname, '../compiled/CreditABS.json');
-const { interface, bytecode } = require(contractPath);
-
 const web3 = new Web3(ganache.provider());
+const SecurityManager = require(path.resolve(__dirname, '../compiled/SecurityManager.json'));
+const CreditABS = require(path.resolve(__dirname, '../compiled/CreditABS.json'));
 
 let accounts;
+let securityManager;
 let abs;
-const param = {
-    _name: 'Test',
-    _goal: '30000000',
-    _description: 'Test Security'
-};
 
 describe('Contract Deployment', () => {
     beforeEach('Deploy Contract', async () => {
         accounts = await web3.eth.getAccounts();
-        abs = await new web3.eth.Contract(JSON.parse(interface))
-            .deploy({ data: bytecode, arguments: Object.values(param) })
+
+        securityManager = await new web3.eth.Contract(JSON.parse(SecurityManager.interface))
+            .deploy({ data: SecurityManager.bytecode })
+            .send({ from: accounts[0], gas: '5000000' });
+        
+        await securityManager.methods.createABS('TEST', 3000000, 'TEST Security')
             .send({ from: accounts[0], gas: '5000000'});
+
+        const [address] = await securityManager.methods.getABSList().call();
+        
+        abs = await new web3.eth.Contract(JSON.parse(CreditABS.interface), address);
     });
 
     it('Deploy a contract', () => {
-        assert.ok(abs.options.address);
+        assert.ok(securityManager.options.address);
+        // assert.ok(abs.options.address);
     });
 
     describe('Contract Purchase', () => {
