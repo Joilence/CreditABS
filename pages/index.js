@@ -43,7 +43,7 @@ class Index extends React.Component {
                         </Link>
                         <Link route={`/projects/${abs}`}>
                             <Button size="small" color="secondary">
-                                Detail
+                                Details
                             </Button>
                         </Link>
                     </CardActions>
