@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha tests/",
     "compile": "node scripts/compile.js",
+    "pretest": "npm run compile",
+    "test": "mocha tests/",
+    "predeploy": "npm run test",
     "deploy": "node scripts/deploy.js",
     "dev": "node server.js",
     "build": "next build",
