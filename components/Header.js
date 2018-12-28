@@ -49,7 +49,7 @@ class Header extends React.Component {
                 </Typography>
               </a>
             </p>
-            <Link route="/projects/create">
+            <Link route="/abs/create">
               <Button variant="raised" color="primary">
                 Create Security
               </Button>

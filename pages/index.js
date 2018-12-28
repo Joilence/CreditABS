@@ -83,12 +83,12 @@ class Index extends React.Component {
                         </Grid>
                     </CardContent>
                     <CardActions>
-                        <Link route={`/projects/${abs.address}`}>
+                        <Link route={`/abs/${abs.address}`}>
                             <Button size="small" color="primary">
                                 Purchase
                             </Button>
                         </Link>
-                        <Link route={`/projects/${abs.address}`}>
+                        <Link route={`/abs/${abs.address}`}>
                             <Button size="small" color="secondary">
                                 Details
                             </Button>
