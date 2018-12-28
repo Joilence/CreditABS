@@ -166,6 +166,20 @@ contract CreditABS {
             payment.state = PaymentState.Approved;
     }
 
+    function getSummary() public view returns (string, address, uint256, uint256, string, uint256, uint256, uint256) {
+        return (
+            name,
+            issuer,  
+            financingGoal,
+            fundReceived,
+            description,
+            numOfTokenholders,
+
+            address(this).balance,
+            payments.length
+        );
+    }
+
     function processPayment(uint256 index) public onlyIssuer {
         Payment storage payment = payments[index];
 
