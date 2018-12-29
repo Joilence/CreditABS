@@ -180,6 +180,8 @@ contract CreditABS {
         );
     }
 
+    //TODO: Fix fundReceived and address(this).balance
+
     function processPayment(uint256 index) public onlyIssuer {
         Payment storage payment = payments[index];
 
