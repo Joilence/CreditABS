@@ -1,5 +1,18 @@
 import React from 'react';
-import { Grid, Button, Typography, LinearProgress, Paper, TextField, CircularProgress } from '@material-ui/core';
+import {
+  Grid,
+  Button,
+  Typography,
+  LinearProgress,
+  CircularProgress,
+  Paper,
+  TextField,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from '@material-ui/core';
 
 import { Link } from '../../routes';
 import web3 from '../../libs/web3';
@@ -25,6 +38,12 @@ class ABSDetail extends React.Component {
       numOfPayments] = Object.values(
         summary
       );
+    
+    const tasks = [];
+    for (let i = 0; i < numOfPayments; i++) {
+      tasks.push(contract.methods.payments(i).call());
+    }
+    const payments = await Promise.all(tasks);
 
     const abs = {
       address: query.address,
@@ -35,8 +54,11 @@ class ABSDetail extends React.Component {
       numOfPayments,
       issuer,
       description,
-      fundReceived
+      fundReceived,
+      payments,
     };
+
+    console.log(abs);
 
     return { abs };
   }
@@ -104,6 +126,10 @@ class ABSDetail extends React.Component {
           Security Detail
         </Typography>
         {this.renderBasicInfo(abs)}
+        <Typography variant="title" color="inherit" style={{ margin: '30px 0 15px' }}>
+          Payments
+        </Typography>
+        {this.renderPayments(abs)}
       </Layout>
     );
   }
@@ -150,6 +176,45 @@ class ABSDetail extends React.Component {
       </Paper>
     );
   }
+
+  renderPayments(abs) {
+    console.log(abs);
+    return (
+      <Paper style={{ padding: '15px' }}>
+        <Table style={{ marginBottom: '30px' }}>
+          <TableHead>
+            <TableRow>
+              <TableCell>支出理由</TableCell>
+              <TableCell numeric>支出金额</TableCell>
+              <TableCell>收款人</TableCell>
+              <TableCell>已完成？</TableCell>
+              <TableCell>投票状态</TableCell>
+              <TableCell>Action</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {abs.payments.map(payment => {
+              return (
+                <TableRow key={payment.id}>
+                  <TableCell>{payment.description}</TableCell>
+                  <TableCell numeric>{web3.utils.fromWei(payment.amount, 'ether')} ETH</TableCell>
+                  <TableCell>{payment.receiver}</TableCell>
+                  <TableCell>{payment.state}</TableCell>
+                  <TableCell>{payment.voteShare / abs.fundReceived} %</TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+        <Link route={`/abs/${abs.address}/payments/create`}>
+          <Button variant="raised" color="primary">
+            Create Payment
+          </Button>
+        </Link>
+      </Paper>
+    );
+  } 
 }
 
 export default withRoot(ABSDetail);
