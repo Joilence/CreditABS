@@ -71,6 +71,7 @@ class ABSDetail extends React.Component {
       errmsg: '',
       loading: false,
       isApproving: false,
+      isPaying: false,
     };
 
     this.onSubmit = this.purchaseABS.bind(this);
@@ -123,12 +124,16 @@ class ABSDetail extends React.Component {
         this.setState({ isApproving: i });
   
         const accounts = await web3.eth.getAccounts();
-        const investor = accounts[0];
+        const sender = accounts[0];
   
         const contract = CreditABS(this.props.abs.address);
+        const isInvestor = await contract.methods.balances(sender).call();
+        if (isInvestor == 0) {
+          return window.alert('Only tokenholder can vote!');
+        }
         const result = await contract.methods
           .approvePayment(i)
-          .send({ from: investor, gas: '5000000' });
+          .send({ from: sender, gas: '5000000' });
   
         window.alert('Success!');
   
@@ -142,7 +147,34 @@ class ABSDetail extends React.Component {
         this.setState({ isApproving: false });
       }
     }
-    
+  
+  async processPayment(i) {
+    try {
+      this.setState({ isPaying: i });
+
+      const accounts = await web3.eth.getAccounts();
+      const sender = accounts[0];
+
+      const contract = CreditABS(this.props.abs.address);
+      if (sender !== this.props.abs.issuer) {
+        return window.alert('Only issuer can process payment!');
+      }
+      const result = await contract.methods
+        .processPayment(i)
+        .send({ from: sender, gas: '5000000' });
+
+      window.alert('Payment Processed!');
+
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
+    } catch (err) {
+      console.error(err);
+      window.alert(err.message || err.toString());
+    } finally {
+      this.setState({ isPaying: false });
+    }
+  }
   
   render() {
     const { abs } = this.props;
@@ -236,8 +268,13 @@ class ABSDetail extends React.Component {
     return typeof this.state.isApproving === 'number' && this.state.isApproving === i;
   }
 
+  isPaying(i) {
+    return typeof this.state.isPaying === 'number' && this.state.isPaying === i;
+  }
+
   renderPaymentRow(payment, index, abs) {
     const canApprove = (payment.state == 0);
+    const canDoPayment = payment.state == 2 && payment.voteShare / abs.fundReceived > 0.5;
     return (
       <TableRow key={index}>
         <TableCell>{payment.description}</TableCell>
@@ -245,12 +282,17 @@ class ABSDetail extends React.Component {
         <TableCell>{payment.receiver}</TableCell>
         <TableCell>{payment.state}</TableCell>
         <TableCell>
-          {payment.voteShare / abs.fundReceived} %
+          {payment.voteShare / abs.fundReceived * 100} %
         </TableCell>
         <TableCell>
           {canApprove && (
             <Button size="small" color="primary" onClick={() => this.approvePayment(index)}>
               {this.isApproving(index) ? <CircularProgress color="secondary" size={24} /> : 'Approve'}
+            </Button>
+          )}
+          {canDoPayment && (
+            <Button size="small" color="primary" onClick={() => this.processPayment(index)}>
+              {this.isPaying(index) ? <CircularProgress color="primary" size={24} /> : 'Process'}
             </Button>
           )}
         </TableCell>
