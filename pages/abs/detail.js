@@ -70,6 +70,7 @@ class ABSDetail extends React.Component {
       amount: 0,
       errmsg: '',
       loading: false,
+      isApproving: false,
     };
 
     this.onSubmit = this.purchaseABS.bind(this);
@@ -116,6 +117,32 @@ class ABSDetail extends React.Component {
         this.setState({ loading: false });
       }
     }
+
+    async approvePayment(i) {
+      try {
+        this.setState({ isApproving: i });
+  
+        const accounts = await web3.eth.getAccounts();
+        const investor = accounts[0];
+  
+        const contract = CreditABS(this.props.abs.address);
+        const result = await contract.methods
+          .approvePayment(i)
+          .send({ from: investor, gas: '5000000' });
+  
+        window.alert('Success!');
+  
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      } catch (err) {
+        console.error(err);
+        window.alert(err.message || err.toString());
+      } finally {
+        this.setState({ isApproving: false });
+      }
+    }
+    
   
   render() {
     const { abs } = this.props;
@@ -184,27 +211,16 @@ class ABSDetail extends React.Component {
         <Table style={{ marginBottom: '30px' }}>
           <TableHead>
             <TableRow>
-              <TableCell>支出理由</TableCell>
-              <TableCell numeric>支出金额</TableCell>
-              <TableCell>收款人</TableCell>
-              <TableCell>已完成？</TableCell>
-              <TableCell>投票状态</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell numeric>Amount</TableCell>
+              <TableCell>Receiver</TableCell>
+              <TableCell>State</TableCell>
+              <TableCell>Vote</TableCell>
               <TableCell>Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {abs.payments.map(payment => {
-              return (
-                <TableRow key={payment.id}>
-                  <TableCell>{payment.description}</TableCell>
-                  <TableCell numeric>{web3.utils.fromWei(payment.amount, 'ether')} ETH</TableCell>
-                  <TableCell>{payment.receiver}</TableCell>
-                  <TableCell>{payment.state}</TableCell>
-                  <TableCell>{payment.voteShare / abs.fundReceived} %</TableCell>
-                  <TableCell></TableCell>
-                </TableRow>
-              );
-            })}
+            {abs.payments.map((payment, index) => this.renderPaymentRow(payment, index, abs))}
           </TableBody>
         </Table>
         <Link route={`/abs/${abs.address}/payments/create`}>
@@ -214,7 +230,33 @@ class ABSDetail extends React.Component {
         </Link>
       </Paper>
     );
-  } 
+  }
+
+  isApproving(i) {
+    return typeof this.state.isApproving === 'number' && this.state.isApproving === i;
+  }
+
+  renderPaymentRow(payment, index, abs) {
+    const canApprove = (payment.state == 0);
+    return (
+      <TableRow key={index}>
+        <TableCell>{payment.description}</TableCell>
+        <TableCell numeric>{web3.utils.fromWei(payment.amount, 'ether')} ETH</TableCell>
+        <TableCell>{payment.receiver}</TableCell>
+        <TableCell>{payment.state}</TableCell>
+        <TableCell>
+          {payment.voteShare / abs.fundReceived} %
+        </TableCell>
+        <TableCell>
+          {canApprove && (
+            <Button size="small" color="primary" onClick={() => this.approvePayment(index)}>
+              {this.isApproving(index) ? <CircularProgress color="secondary" size={24} /> : 'Approve'}
+            </Button>
+          )}
+        </TableCell>
+      </TableRow>
+    );
+  }
 }
 
 export default withRoot(ABSDetail);
