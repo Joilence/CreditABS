@@ -35,6 +35,7 @@ class Index extends React.Component {
             );
     
             return {
+                address,
                 name,
                 issuer,  
                 financingGoal,
@@ -65,7 +66,7 @@ class Index extends React.Component {
 
     renderABS(abs) {
 
-        const progress = abs.contractBalance / abs.financingGoal * 100;
+        const progress = abs.fundReceived / abs.financingGoal * 100;
 
         return (
             <Grid item md={6} key={abs.address}>
@@ -78,7 +79,7 @@ class Index extends React.Component {
                         <Grid container spacing={16}>
                             <InfoBlock title={`${web3.utils.fromWei(abs.financingGoal, 'ether')} ETH`} description="Financing Goal" />
                             <InfoBlock title={`${web3.utils.fromWei(abs.fundReceived, 'ether')} ETH`} description="Fund Received" />
-                            <InfoBlock title={`${abs.numOfTokenholders} Tokenholders`} description="Tokenholders" />
+                            <InfoBlock title={`${abs.numOfTokenholders} People`} description="Tokenholders" />
                             <InfoBlock title={`${web3.utils.fromWei(abs.contractBalance, 'ether')} ETH`} description="Contract Balance" />
                         </Grid>
                     </CardContent>
