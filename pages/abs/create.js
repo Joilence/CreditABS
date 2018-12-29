@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Button, Typography, TextField, Paper } from '@material-ui/core';
+import { Grid, Button, Typography, TextField, Paper, CircularProgress } from '@material-ui/core';
 
 import { Link } from '../../routes';
 import web3 from '../../libs/web3';
@@ -14,8 +14,12 @@ class ABSCreate extends React.Component {
     this.state = {
       name: '',
       goal: 0,
-      description: ''
+      description: '',
+      errmsg: '',
+      loading: false,
     };
+
+    this.onSubmit = this.createABS.bind(this);
   }
 
   getInputHandler(key) {
@@ -24,6 +28,42 @@ class ABSCreate extends React.Component {
       this.setState({ [key]: e.target.value });
     };
   }
+
+  async createABS() {
+      const { name, goal, description } = this.state;
+      console.log(this.state);
+  
+      if (!name) {
+        return this.setState({ errmsg: 'Name cannot be void' });
+      }
+      if (goal <= 0) {
+        return this.setState({ errmsg: 'Goal must greater than 0' });
+      }
+      if (!description) {
+        return this.setState({ errmsg: 'Description cannot be void' });
+      }
+
+      const goalInWei = web3.utils.toWei(goal, 'ether');
+  
+      try {
+        this.setState({ loading: true });
+  
+        const accounts = await web3.eth.getAccounts();
+        const issuer = accounts[0];
+
+        const result = await SecurityManager.methods
+          .createABS(name, goalInWei, description)
+          .send({ from: issuer, gas: '5000000' });
+  
+        this.setState({ errmsg: 'Success!' });
+        console.log(result);
+      } catch (err) {
+        console.error(err);
+        this.setState({ errmsg: err.message || err.toString });
+      } finally {
+        this.setState({ loading: false });
+      }
+    }
 
   render() {
     return (
@@ -62,9 +102,14 @@ class ABSCreate extends React.Component {
               margin="normal"
             />
           </form>
-          <Button variant="raised" size="large" color="primary">
-            Create Security
+          <Button variant="raised" size="large" color="primary" onClick={this.onSubmit}>
+            {this.state.loading ? <CircularProgress color="secondary" size={24} /> : 'Create'}
           </Button>
+          {!!this.state.errmsg && (
+            <Typography component="p" style={{ color: 'red' }}>
+              {this.state.errmsg}
+            </Typography>
+          )}
         </Paper>
       </Layout>
     );
