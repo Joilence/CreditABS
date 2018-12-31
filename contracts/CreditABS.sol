@@ -141,7 +141,7 @@ contract CreditABS {
     }
 
     function createPayment(string memory _description, uint _amount, address _receiver) public onlyIssuer {
-        require(_amount <= fundReceived, "Contract doesn't have enough balance.");
+        require(_amount <= address(this).balance, "Contract doesn't have enough balance.");
         Payment memory newPayment = Payment({
             description: _description,
             amount: _amount,
@@ -180,15 +180,12 @@ contract CreditABS {
         );
     }
 
-    //TODO: Fix fundReceived and address(this).balance
-
     function processPayment(uint256 index) public onlyIssuer {
         Payment storage payment = payments[index];
 
         require(payment.state == PaymentState.Approved, "This payment is either ended or hasn't been approved.");
         require(address(this).balance >= payment.amount, "The contract doesn't have enough money.");
         payment.receiver.transfer(payment.amount);
-        fundReceived = fundReceived.sub(payment.amount);
         payment.state = PaymentState.Completed;
     }
 

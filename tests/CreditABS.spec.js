@@ -180,7 +180,7 @@ describe('Contract Deployment', () => {
                         .call({from: accounts[1]});
                     assert.ok(false);
                 } catch (err) {
-                    console.log(err.results[Object.keys(err.results)[0]].reason);
+                    // console.log(err.results[Object.keys(err.results)[0]].reason);
                     assert.ok(err);
                 }
             });
@@ -191,7 +191,7 @@ describe('Contract Deployment', () => {
                         .call({from: accounts[0]});
                     assert.ok(false);
                 } catch (err) {
-                    console.log(err.results[Object.keys(err.results)[0]].reason);
+                    // console.log(err.results[Object.keys(err.results)[0]].reason);
                     assert.ok(err);
                 }
             });
@@ -216,7 +216,7 @@ describe('Contract Deployment', () => {
                     await abs.methods.approvePayment(0).call({from: accounts[0]});
                     assert.ok(false);
                 } catch (err) {
-                    console.log(err.results[Object.keys(err.results)[0]].reason);
+                    // console.log(err.results[Object.keys(err.results)[0]].reason);
                     assert.ok(err);
                 }
             })
@@ -227,7 +227,7 @@ describe('Contract Deployment', () => {
                     await abs.methods.approvePayment(0).send({from: accounts[1]});
                     assert.ok(false);
                 } catch (err) {
-                    console.log(err.results[Object.keys(err.results)[0]].reason);
+                    // console.log(err.results[Object.keys(err.results)[0]].reason);
                     assert.ok(err);
                 }
             });
@@ -250,20 +250,17 @@ describe('Contract Deployment', () => {
 
             it('should allow issuer to process payment', async () => {
                 
-                const oldB = await web3.eth.getBalance(abs.options.address);
+                const oldBalance = await web3.eth.getBalance(abs.options.address);
 
                 let payment = await abs.methods.payments(0).call();
                 assert.equal(payment.state, 2);
 
-                const oldBalance = await abs.methods.fundReceived().call();
                 await abs.methods.processPayment(0).send({from: accounts[0], gas: '1000000'});
                 payment = await abs.methods.payments(0).call();
-                const newBalance = await abs.methods.fundReceived().call();
-                const newB = await web3.eth.getBalance(abs.options.address);
+                const newBalance = await web3.eth.getBalance(abs.options.address);
 
-                assert.equal(oldB - newB, payment.amount);
-                assert.equal(payment.state, 3);
                 assert.equal(oldBalance - newBalance, payment.amount);
+                assert.equal(payment.state, 3);
             });
 
             it('should not allow non-issuer to process payment', async () => {
