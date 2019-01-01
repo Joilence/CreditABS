@@ -272,6 +272,22 @@ class ABSDetail extends React.Component {
     return typeof this.state.isPaying === 'number' && this.state.isPaying === i;
   }
 
+  translateState(state) {
+    if (state == 0) {
+      return 'Voting';
+    } else if (state == 1) {
+      return 'Declined';
+    } else if (state == 2) {
+      return 'Approved';
+    } else if (state == 3) {
+      return 'Completed';
+    } else if (state == 4) {
+      return 'Dropped';
+    } else {
+      return 'ERR_STATE';
+    }
+  }
+
   renderPaymentRow(payment, index, abs) {
     const canApprove = (payment.state == 0);
     const canDoPayment = payment.state == 2 && payment.voteShare / abs.fundReceived > 0.5;
@@ -280,7 +296,7 @@ class ABSDetail extends React.Component {
         <TableCell>{payment.description}</TableCell>
         <TableCell numeric>{web3.utils.fromWei(payment.amount, 'ether')} ETH</TableCell>
         <TableCell>{payment.receiver}</TableCell>
-        <TableCell>{payment.state}</TableCell>
+        <TableCell>{this.translateState(payment.state)}</TableCell>
         <TableCell>
           {payment.voteShare / abs.fundReceived * 100} %
         </TableCell>
